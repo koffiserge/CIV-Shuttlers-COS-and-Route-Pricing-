@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shuttlers CI — Pricing Simulator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green-900: #0a1f14;
+  --green-800: #102b1c;
+  --green-700: #1a4228;
+  --green-600: #1e6b3a;
+  --green-500: #27924e;
+  --green-400: #2db862;
+  --green-300: #52cc7a;
+  --green-200: #a8edc0;
+  --green-100: #e0f7e9;
+  --green-50:  #f3fdf6;
+  --amber-500: #d97706;
+  --amber-200: #fde68a;
+  --amber-100: #fef3c7;
+  --blue-500: #2563eb;
+  --blue-100: #dbeafe;
+  --red-500: #dc2626;
+  --red-100: #fee2e2;
+  --gray-900: #111827;
+  --gray-700: #374151;
+  --gray-500: #6b7280;
+  --gray-300: #d1d5db;
+  --gray-200: #e5e7eb;
+  --gray-100: #f3f4f6;
+  --gray-50:  #f9fafb;
+  --white: #ffffff;
+  --font: 'DM Sans', sans-serif;
+  --mono: 'DM Mono', monospace;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 12px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.10);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); background: var(--gray-50); color: var(--gray-900); font-size: 14px; line-height: 1.6; }
+
+/* NAV */
+.nav { background: var(--green-900); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 56px; }
+.nav-brand { display: flex; align-items: center; gap: 10px; }
+.nav-logo { width: 32px; height: 32px; background: var(--green-400); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.nav-logo svg { width: 18px; height: 18px; fill: white; }
+.nav-title { color: white; font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
+.nav-sub { color: var(--green-300); font-size: 12px; }
+.nav-badge { background: var(--green-700); color: var(--green-200); font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 500; }
+
+/* TABS */
+.tab-bar { background: var(--green-800); padding: 0 24px; display: flex; gap: 2px; border-bottom: 1px solid var(--green-700); }
+.tab-btn { padding: 13px 18px; font-family: var(--font); font-size: 13px; font-weight: 500; color: var(--green-300); background: none; border: none; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .15s, border-color .15s; white-space: nowrap; }
+.tab-btn:hover { color: white; }
+.tab-btn.active { color: var(--green-300); border-bottom-color: var(--green-400); color: white; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* LAYOUT */
+.page { max-width: 1100px; margin: 0 auto; padding: 24px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.grid4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; }
+
+/* CARDS */
+.card { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 20px; }
+.card-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--gray-500); margin-bottom: 16px; display: flex; align-items: center; gap: 6px; }
+.card-title::before { content: ''; display: inline-block; width: 3px; height: 14px; background: var(--green-400); border-radius: 2px; }
+
+/* FORM ELEMENTS */
+.field { margin-bottom: 14px; }
+.field:last-child { margin-bottom: 0; }
+label { display: block; font-size: 12px; font-weight: 500; color: var(--gray-600, #4b5563); margin-bottom: 5px; }
+.input-wrap { position: relative; display: flex; align-items: center; }
+.input-wrap input, .input-wrap select { width: 100%; height: 36px; padding: 0 10px; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-family: var(--font); font-size: 13px; color: var(--gray-900); background: white; transition: border-color .15s, box-shadow .15s; outline: none; }
+.input-wrap input:focus, .input-wrap select:focus { border-color: var(--green-500); box-shadow: 0 0 0 3px rgba(39,146,78,.12); }
+.input-wrap .suffix { position: absolute; right: 10px; font-size: 11px; color: var(--gray-500); font-weight: 500; pointer-events: none; font-family: var(--mono); }
+.input-wrap input.has-suffix { padding-right: 48px; }
+.hint { font-size: 11px; color: var(--gray-500); margin-top: 3px; }
+.calc-field { background: var(--green-50); border: 1px solid var(--green-200); border-radius: var(--radius-sm); padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+.calc-field-label { font-size: 12px; color: var(--green-700); }
+.calc-field-value { font-size: 14px; font-weight: 600; color: var(--green-700); font-family: var(--mono); }
+
+/* TOGGLE */
+.toggle-group { display: flex; gap: 2px; background: var(--gray-100); padding: 3px; border-radius: var(--radius-sm); }
+.toggle-btn { flex: 1; padding: 6px 12px; font-family: var(--font); font-size: 12px; font-weight: 500; border: none; background: none; border-radius: 4px; cursor: pointer; color: var(--gray-500); transition: all .15s; }
+.toggle-btn.active { background: white; color: var(--gray-900); box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+
+/* RESULT CARDS */
+.result-card { border-radius: var(--radius); padding: 16px; }
+.result-card.green { background: var(--green-100); border: 1px solid var(--green-200); }
+.result-card.amber { background: var(--amber-100); border: 1px solid var(--amber-200); }
+.result-card.blue  { background: var(--blue-100); border: 1px solid #bfdbfe; }
+.result-card.white { background: white; border: 1px solid var(--gray-200); }
+.result-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--gray-500); margin-bottom: 4px; }
+.result-label.green { color: var(--green-600); }
+.result-label.amber { color: var(--amber-500); }
+.result-label.blue  { color: var(--blue-500); }
+.result-value { font-size: 22px; font-weight: 600; font-family: var(--mono); color: var(--gray-900); }
+.result-value.green { color: var(--green-700); }
+.result-value.amber { color: #92400e; }
+.result-value.blue  { color: #1e40af; }
+.result-sub { font-size: 11px; color: var(--gray-500); margin-top: 2px; }
+
+/* BREAKDOWN TABLE */
+.breakdown { width: 100%; border-collapse: collapse; font-size: 13px; }
+.breakdown th { text-align: left; font-weight: 600; color: var(--gray-500); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding: 8px 10px; border-bottom: 1px solid var(--gray-200); }
+.breakdown td { padding: 9px 10px; border-bottom: 1px solid var(--gray-100); color: var(--gray-700); }
+.breakdown tr:last-child td { border-bottom: none; font-weight: 600; color: var(--gray-900); background: var(--gray-50); }
+.breakdown td.val { font-family: var(--mono); text-align: right; font-weight: 500; }
+.bar-cell { width: 80px; }
+.bar-track { height: 5px; background: var(--gray-200); border-radius: 3px; overflow: hidden; }
+.bar-fill { height: 5px; background: var(--green-400); border-radius: 3px; transition: width .4s; }
+.bar-fill.amber { background: #f59e0b; }
+
+/* SENSITIVITY TABLE */
+.sens-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.sens-table th { background: var(--green-800); color: white; padding: 8px 10px; text-align: center; font-weight: 500; }
+.sens-table th:first-child { text-align: left; }
+.sens-table td { padding: 8px 10px; border-bottom: 1px solid var(--gray-100); text-align: center; font-family: var(--mono); }
+.sens-table td:first-child { text-align: left; font-family: var(--font); color: var(--gray-600, #4b5563); }
+.sens-table tr:hover td { background: var(--green-50); }
+.sens-highlight { background: var(--green-100) !important; font-weight: 600; color: var(--green-700); }
+
+/* IO REFS TABLE */
+.ref-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.ref-table th { background: var(--gray-100); padding: 8px 10px; text-align: left; font-weight: 600; color: var(--gray-600, #4b5563); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+.ref-table td { padding: 9px 10px; border-bottom: 1px solid var(--gray-100); cursor: pointer; }
+.ref-table tr:hover td { background: var(--green-50); }
+.ref-table tr:hover td:first-child { color: var(--green-600); font-weight: 500; }
+
+/* ──────────────────────────────────────────
+   ROUTE PRICING — NEW MODULE
+   ────────────────────────────────────────── */
+.route-hero { background: linear-gradient(135deg, var(--green-900) 0%, var(--green-700) 100%); border-radius: var(--radius); padding: 28px 28px 24px; margin-bottom: 20px; }
+.route-hero-title { color: white; font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+.route-hero-sub { color: var(--green-200); font-size: 13px; margin-bottom: 20px; }
+.distance-input-wrap { display: flex; align-items: center; gap: 12px; }
+.distance-input-wrap input { flex: 1; height: 52px; font-size: 22px; font-weight: 600; font-family: var(--mono); background: rgba(255,255,255,.1); border: 1.5px solid rgba(255,255,255,.2); border-radius: var(--radius); color: white; padding: 0 16px; outline: none; transition: border-color .15s; max-width: 220px; }
+.distance-input-wrap input::placeholder { color: rgba(255,255,255,.35); }
+.distance-input-wrap input:focus { border-color: var(--green-300); background: rgba(255,255,255,.15); }
+.distance-unit { color: var(--green-300); font-size: 15px; font-weight: 500; }
+.distance-desc { color: var(--green-200); font-size: 12px; margin-top: 8px; }
+
+.seat-result-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+@media (max-width: 700px) { .seat-result-grid { grid-template-columns: 1fr 1fr; } .grid2, .grid3, .grid4 { grid-template-columns: 1fr; } }
+
+.seat-card { background: white; border-radius: var(--radius); padding: 16px; border: 1px solid var(--gray-200); transition: box-shadow .15s; }
+.seat-card:hover { box-shadow: var(--shadow); }
+.seat-card-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-bottom: 10px; }
+.seat-card-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--gray-500); margin-bottom: 4px; }
+.seat-card-value { font-size: 20px; font-weight: 600; font-family: var(--mono); color: var(--gray-900); }
+.seat-card-sub { font-size: 11px; color: var(--gray-500); margin-top: 2px; }
+.seat-card.cos .seat-card-icon { background: #fee2e2; }
+.seat-card.aller .seat-card-icon { background: var(--green-100); }
+.seat-card.ar .seat-card-icon { background: var(--blue-100); }
+.seat-card.marge .seat-card-icon { background: var(--amber-100); }
+.seat-card.cos .seat-card-value { color: #991b1b; }
+.seat-card.aller .seat-card-value { color: var(--green-700); }
+.seat-card.ar .seat-card-value { color: #1e40af; }
+.seat-card.marge .seat-card-value { color: #92400e; }
+
+.inout-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+.inout-card { border-radius: var(--radius); padding: 18px; border: 1px solid var(--gray-200); }
+.inout-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.inout-title .dot { width: 8px; height: 8px; border-radius: 50%; }
+.inout-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--gray-100); font-size: 13px; }
+.inout-row:last-child { border-bottom: none; }
+.inout-row-label { color: var(--gray-600, #4b5563); }
+.inout-row-val { font-family: var(--mono); font-weight: 500; }
+
+.distance-table-wrap { overflow-x: auto; }
+.dist-table { width: 100%; border-collapse: collapse; font-size: 12px; white-space: nowrap; }
+.dist-table th { background: var(--green-900); color: white; padding: 9px 12px; text-align: center; font-weight: 500; font-size: 11px; }
+.dist-table th:first-child { text-align: left; }
+.dist-table td { padding: 9px 12px; text-align: center; border-bottom: 1px solid var(--gray-100); font-family: var(--mono); }
+.dist-table td:first-child { text-align: left; font-family: var(--font); color: var(--gray-600, #4b5563); font-weight: 500; }
+.dist-table tr.active-row td { background: var(--green-100); color: var(--green-800); font-weight: 600; }
+.dist-table tr:hover td { background: var(--green-50); }
+
+/* SYNC BANNER */
+.sync-banner { background: var(--green-50); border: 1px solid var(--green-200); border-radius: var(--radius-sm); padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.sync-banner-text { font-size: 12px; color: var(--green-700); }
+.sync-btn { background: var(--green-500); color: white; border: none; border-radius: var(--radius-sm); padding: 6px 14px; font-family: var(--font); font-size: 12px; font-weight: 500; cursor: pointer; transition: background .15s; }
+.sync-btn:hover { background: var(--green-600); }
+
+/* FOOTER */
+.footer { background: var(--green-900); color: var(--green-300); font-size: 11px; text-align: center; padding: 14px 24px; margin-top: 32px; line-height: 1.8; }
+
+/* PROFIT METER */
+.profit-meter { height: 8px; background: var(--gray-200); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+.profit-fill { height: 8px; border-radius: 4px; transition: width .4s, background .4s; }
+
+/* TAGS */
+.tag { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; text-transform: uppercase; letter-spacing: .04em; }
+.tag.in { background: var(--green-100); color: var(--green-700); }
+.tag.out { background: var(--blue-100); color: #1e40af; }
+
+</style>
+</head>
+<body>
+
+<!-- ───── NAV ───── -->
+<nav class="nav">
+  <div class="nav-brand">
+    <div class="nav-logo">
+      <svg viewBox="0 0 24 24"><path d="M3 17h18v2H3zm0-7h18v2H3zM3 6h18v2H3z"/></svg>
+    </div>
+    <div>
+      <div class="nav-title">Shuttlers CI&nbsp; <span style="font-weight:300;opacity:.7">Pricing Simulator</span></div>
+      <div class="nav-sub">Abidjan Operations</div>
+    </div>
+  </div>
+  <div class="nav-badge">v2.1</div>
+</nav>
+
+<!-- ───── TAB BAR ───── -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('fleet',this)">🚌&nbsp; Shuttlers Fleet</button>
+  <button class="tab-btn" onclick="switchTab('io',this)">🤝&nbsp; Opérateur Indépendant (IO)</button>
+  <button class="tab-btn" onclick="switchTab('route',this)">📍&nbsp; Route → Seat Pricing</button>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 1 — SHUTTLERS FLEET
+     ══════════════════════════════════════════ -->
+<div id="tab-fleet" class="tab-panel active">
+<div class="page">
+<div class="grid2" style="align-items:start">
+
+  <!-- LEFT COL: INPUTS -->
+  <div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title">Véhicule &amp; Financement</div>
+
+      <div class="field">
+        <label>Coût d'acquisition</label>
+        <div class="input-wrap"><input type="number" id="f-cost" value="18000000" oninput="calcFleet()"><span class="suffix">XOF</span></div>
+      </div>
+      <div class="field">
+        <label>Assurance annuelle</label>
+        <div class="input-wrap"><input type="number" id="f-ins" value="600000" oninput="calcFleet()"><span class="suffix">XOF</span></div>
+      </div>
+      <div class="field">
+        <label>Documentation</label>
+        <div class="input-wrap"><input type="number" id="f-doc" value="350000" oninput="calcFleet()"><span class="suffix">XOF</span></div>
+      </div>
+      <div class="field">
+        <label>Tracker GPS</label>
+        <div class="input-wrap"><input type="number" id="f-track" value="150000" oninput="calcFleet()"><span class="suffix">XOF</span></div>
+      </div>
+
+      <div class="field" style="margin-top:6px">
+        <label>Financement par prêt ?</label>
+        <div class="toggle-group" style="max-width:200px">
+          <button class="toggle-btn active" id="f-loan-yes" onclick="setLoan(true)">✓ Oui</button>
+          <button class="toggle-btn" id="f-loan-no" onclick="setLoan(false)">Non</button>
+        </div>
+      </div>
+      <div id="f-loan-fields">
+        <div class="grid2" style="gap:10px">
+          <div class="field">
+            <label>Taux d'intérêt annuel</label>
+            <div class="input-wrap"><input type="number" id="f-rate" value="14" step=".5" oninput="calcFleet()"><span class="suffix">%</span></div>
+          </div>
+          <div class="field">
+            <label>Durée</label>
+            <div class="input-wrap"><input type="number" id="f-tenure" value="36" oninput="calcFleet()"><span class="suffix">mois</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="calc-field">
+        <span class="calc-field-label">Remboursement mensuel (calculé)</span>
+        <span class="calc-field-value" id="f-pmt-display">—</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Opex &amp; Coûts variables</div>
+      <div class="field">
+        <label>Salaire chauffeur / mois</label>
+        <div class="input-wrap"><input type="number" id="f-driver" value="180000" oninput="calcFleet()"><span class="suffix">XOF</span></div>
+      </div>
+      <div class="field">
+        <label>Maintenance / mois</label>
+        <div class="input-wrap"><input type="number" id="f-maint" value="150000" oninput="calcFleet()"><span class="suffix">XOF</span></div>
+      </div>
+      <div class="field">
+        <label>Frais de gestion / mois</label>
+        <div class="input-wrap"><input type="number" id="f-mgt" value="100000" oninput="calcFleet()"><span class="suffix">XOF</span></div>
+      </div>
+      <div class="field">
+        <label>Autres frais / mois</label>
+        <div class="input-wrap"><input type="number" id="f-other" value="0" oninput="calcFleet()"><span class="suffix">XOF</span></div>
+      </div>
+      <div class="field">
+        <label>Carburant journalier</label>
+        <div class="input-wrap"><input type="number" id="f-fuel" value="8960" oninput="calcFleet()"><span class="suffix">XOF/j</span></div>
+        <div class="hint">= distance AR × conso × prix/L (ex. 40 km × 14 L/100km × 640 FCFA)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT COL: PARAMS + RESULTS -->
+  <div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title">Paramètres de la route</div>
+      <div class="grid2" style="gap:10px">
+        <div class="field">
+          <label>Nombre de sièges</label>
+          <div class="input-wrap"><input type="number" id="f-seats" value="18" oninput="calcFleet()"></div>
+        </div>
+        <div class="field">
+          <label>Jours de travail / mois</label>
+          <div class="input-wrap"><input type="number" id="f-days" value="22" oninput="calcFleet()"></div>
+        </div>
+        <div class="field">
+          <label>Marge bénéficiaire cible</label>
+          <div class="input-wrap"><input type="number" id="f-margin" value="30" step="1" oninput="calcFleet()"><span class="suffix">%</span></div>
+        </div>
+        <div class="field">
+          <label>Taux d'occupation break-even</label>
+          <div class="input-wrap"><input type="number" id="f-occ" value="80" step="5" oninput="calcFleet()"><span class="suffix">%</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title">Prix recommandé</div>
+      <div class="grid2" style="gap:12px;margin-bottom:12px">
+        <div class="result-card green">
+          <div class="result-label green">Prix aller simple</div>
+          <div class="result-value green" id="f-price-ow">—</div>
+          <div class="result-sub">XOF &nbsp;·&nbsp; par siège</div>
+        </div>
+        <div class="result-card amber">
+          <div class="result-label amber">Prix aller-retour</div>
+          <div class="result-value amber" id="f-price-rt">—</div>
+          <div class="result-sub">XOF / siège</div>
+        </div>
+      </div>
+      <div style="background:var(--gray-50);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--gray-600, #4b5563)">
+        Marge cible&nbsp; <strong id="f-margin-label" style="color:var(--green-700)">—</strong>% sur ventes
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title">Structure de coûts journaliers</div>
+      <table class="breakdown">
+        <thead><tr><th>Poste</th><th>XOF/j</th><th class="bar-cell">%</th></tr></thead>
+        <tbody id="f-breakdown-body"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Rentabilité mensuelle</div>
+      <div class="grid3">
+        <div class="result-card white" style="text-align:center">
+          <div class="result-label" style="font-size:10px">COS total</div>
+          <div style="font-size:16px;font-weight:600;font-family:var(--mono);color:var(--red-500)" id="f-cos-monthly">—</div>
+          <div class="result-sub">XOF/mois</div>
+        </div>
+        <div class="result-card white" style="text-align:center">
+          <div class="result-label" style="font-size:10px">Chiffre d'affaires</div>
+          <div style="font-size:16px;font-weight:600;font-family:var(--mono);color:var(--blue-500)" id="f-rev-monthly">—</div>
+          <div class="result-sub">XOF/mois</div>
+        </div>
+        <div class="result-card white" style="text-align:center">
+          <div class="result-label" style="font-size:10px">Profit net</div>
+          <div style="font-size:16px;font-weight:600;font-family:var(--mono);color:var(--green-600)" id="f-profit-monthly">—</div>
+          <div class="result-sub">XOF/mois</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;display:flex;justify-content:space-between;font-size:12px;color:var(--gray-600, #4b5563)">
+        <span>Marge réelle&nbsp; <strong id="f-real-margin" style="color:var(--green-700)">—</strong></span>
+        <span>Sièges à vendre (break-even)&nbsp; <strong id="f-be-seats" style="color:var(--green-700)">—</strong></span>
+      </div>
+      <div class="profit-meter" style="margin-top:10px"><div class="profit-fill" id="f-profit-bar" style="width:0%;background:var(--green-400)"></div></div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 2 — OPÉRATEUR INDÉPENDANT
+     ══════════════════════════════════════════ -->
+<div id="tab-io" class="tab-panel">
+<div class="page">
+<div class="grid2" style="align-items:start">
+
+  <div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title">Coût de location (all-in)</div>
+      <p style="font-size:12px;color:var(--gray-500);margin-bottom:14px;line-height:1.6">Prix journalier tout compris fourni par l'opérateur indépendant — chauffeur, carburant et opex inclus dans le tarif.</p>
+      <div class="field">
+        <label>Coût location journalier (all-in)</label>
+        <div class="input-wrap"><input type="number" id="io-lease" value="90000" oninput="calcIO()"><span class="suffix">XOF/j</span></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title">Paramètres de la route</div>
+      <div class="grid2" style="gap:10px">
+        <div class="field">
+          <label>Nombre de sièges</label>
+          <div class="input-wrap"><input type="number" id="io-seats" value="18" oninput="calcIO()"></div>
+        </div>
+        <div class="field">
+          <label>Jours de travail / mois</label>
+          <div class="input-wrap"><input type="number" id="io-days" value="22" oninput="calcIO()"></div>
+        </div>
+        <div class="field">
+          <label>Marge bénéficiaire cible</label>
+          <div class="input-wrap"><input type="number" id="io-margin" value="20" step="1" oninput="calcIO()"><span class="suffix">%</span></div>
+        </div>
+        <div class="field">
+          <label>Taux d'occupation break-even</label>
+          <div class="input-wrap"><input type="number" id="io-occ" value="80" step="5" oninput="calcIO()"><span class="suffix">%</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Références IO <span style="font-weight:400;font-size:10px;margin-left:4px;text-transform:none;letter-spacing:0">(cliquer pour charger)</span></div>
+      <table class="ref-table">
+        <thead><tr><th>Type véhicule</th><th>Loyer/j</th><th>Sièges</th><th>Marge</th><th>Occup.</th></tr></thead>
+        <tbody>
+          <tr onclick="loadIO(90000,30,19,85)"><td>Yutong</td><td>90 000</td><td>30</td><td>19%</td><td>85%</td></tr>
+          <tr onclick="loadIO(60000,27,20,80)"><td>Coaster</td><td>60 000</td><td>27</td><td>20%</td><td>80%</td></tr>
+          <tr onclick="loadIO(45000,13,10,100)"><td>Hiace</td><td>45 000</td><td>13</td><td>10%</td><td>100%</td></tr>
+          <tr onclick="loadIO(25000,6,8,100)"><td>Sienna</td><td>25 000</td><td>6</td><td>8%</td><td>100%</td></tr>
+          <tr onclick="loadIO(10000,3,5,100)"><td>Car</td><td>10 000</td><td>3</td><td>5%</td><td>100%</td></tr>
+        </tbody>
+      </table>
+      <div style="font-size:11px;color:var(--gray-400,#9ca3af);margin-top:8px">↑ Cliquer sur une ligne pour charger les valeurs</div>
+    </div>
+  </div>
+
+  <div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title">Prix recommandé</div>
+      <div class="grid2" style="gap:12px;margin-bottom:12px">
+        <div class="result-card green">
+          <div class="result-label green">Prix aller simple</div>
+          <div class="result-value green" id="io-price-ow">—</div>
+          <div class="result-sub">XOF &nbsp;·&nbsp; par siège</div>
+        </div>
+        <div class="result-card amber">
+          <div class="result-label amber">Prix aller-retour</div>
+          <div class="result-value amber" id="io-price-rt">—</div>
+          <div class="result-sub">XOF / siège</div>
+        </div>
+      </div>
+      <div class="grid2" style="gap:12px">
+        <div style="background:var(--gray-50);border-radius:var(--radius-sm);padding:10px 12px">
+          <div style="font-size:11px;color:var(--gray-500)">Marge cible</div>
+          <div style="font-size:15px;font-weight:600;font-family:var(--mono);color:var(--green-700)" id="io-margin-label">—%</div>
+        </div>
+        <div style="background:var(--gray-50);border-radius:var(--radius-sm);padding:10px 12px">
+          <div style="font-size:11px;color:var(--gray-500)">Prix de vente véhicule (SP)</div>
+          <div style="font-size:15px;font-weight:600;font-family:var(--mono)" id="io-sp">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title">Rentabilité mensuelle</div>
+      <div class="grid3">
+        <div class="result-card white" style="text-align:center">
+          <div class="result-label" style="font-size:10px">COS total</div>
+          <div style="font-size:16px;font-weight:600;font-family:var(--mono);color:var(--red-500)" id="io-cos-monthly">—</div>
+          <div class="result-sub">XOF/mois</div>
+        </div>
+        <div class="result-card white" style="text-align:center">
+          <div class="result-label" style="font-size:10px">Chiffre d'affaires</div>
+          <div style="font-size:16px;font-weight:600;font-family:var(--mono);color:var(--blue-500)" id="io-rev-monthly">—</div>
+          <div class="result-sub">XOF/mois</div>
+        </div>
+        <div class="result-card white" style="text-align:center">
+          <div class="result-label" style="font-size:10px">Profit net</div>
+          <div style="font-size:16px;font-weight:600;font-family:var(--mono);color:var(--green-600)" id="io-profit-monthly">—</div>
+          <div class="result-sub">XOF/mois</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;display:flex;justify-content:space-between;font-size:12px;color:var(--gray-600, #4b5563)">
+        <span>Marge réelle&nbsp; <strong id="io-real-margin" style="color:var(--green-700)">—</strong></span>
+        <span>Sièges à vendre (break-even)&nbsp; <strong id="io-be-seats" style="color:var(--green-700)">—</strong></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Tableau de sensibilité — prix aller simple (XOF)</div>
+      <div class="distance-table-wrap">
+        <table class="sens-table" id="io-sens-table">
+          <thead id="io-sens-head"></thead>
+          <tbody id="io-sens-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 3 — ROUTE → SEAT PRICING  (NEW)
+     ══════════════════════════════════════════ -->
+<div id="tab-route" class="tab-panel">
+<div class="page">
+
+  <!-- HERO: DISTANCE INPUT -->
+  <div class="route-hero">
+    <div class="route-hero-title">📍 Calculateur de prix par siège selon la distance</div>
+    <div class="route-hero-sub">Entre la distance aller de la route — le simulateur calcule le coût de supply et le prix par siège automatiquement.</div>
+    <div class="distance-input-wrap">
+      <input type="number" id="r-dist" value="40" min="1" max="200" placeholder="40" oninput="calcRoute()">
+      <span class="distance-unit">km &nbsp;aller simple</span>
+    </div>
+    <div class="distance-desc" id="r-dist-desc">Distance aller-retour : <strong style="color:white">80 km</strong> · Carburant estimé : <strong style="color:white">—</strong></div>
+  </div>
+
+  <!-- SYNC BANNER -->
+  <div class="sync-banner">
+    <span class="sync-banner-text">💡 Les paramètres ci-dessous sont indépendants. Tu peux aussi <strong>reprendre les valeurs de l'onglet Fleet</strong> en un clic.</span>
+    <button class="sync-btn" onclick="syncFromFleet()">↑ Reprendre depuis Fleet</button>
+  </div>
+
+  <!-- PARAMS ROW -->
+  <div class="grid2" style="margin-bottom:20px;align-items:start">
+    <div class="card">
+      <div class="card-title">Paramètres véhicule &amp; financement</div>
+      <div class="grid2" style="gap:10px">
+        <div class="field">
+          <label>Coût d'acquisition</label>
+          <div class="input-wrap"><input type="number" id="r-cost" value="18000000" oninput="calcRoute()"><span class="suffix">XOF</span></div>
+        </div>
+        <div class="field">
+          <label>Assurance + Doc + Tracker</label>
+          <div class="input-wrap"><input type="number" id="r-fixed-extra" value="1100000" oninput="calcRoute()"><span class="suffix">XOF</span></div>
+        </div>
+        <div class="field">
+          <label>Taux d'intérêt annuel</label>
+          <div class="input-wrap"><input type="number" id="r-rate" value="14" step=".5" oninput="calcRoute()"><span class="suffix">%</span></div>
+        </div>
+        <div class="field">
+          <label>Durée prêt</label>
+          <div class="input-wrap"><input type="number" id="r-tenure" value="36" oninput="calcRoute()"><span class="suffix">mois</span></div>
+        </div>
+        <div class="field">
+          <label>Salaire chauffeur / mois</label>
+          <div class="input-wrap"><input type="number" id="r-driver" value="180000" oninput="calcRoute()"><span class="suffix">XOF</span></div>
+        </div>
+        <div class="field">
+          <label>Maintenance / mois</label>
+          <div class="input-wrap"><input type="number" id="r-maint" value="150000" oninput="calcRoute()"><span class="suffix">XOF</span></div>
+        </div>
+        <div class="field">
+          <label>Frais gestion / mois</label>
+          <div class="input-wrap"><input type="number" id="r-mgt" value="100000" oninput="calcRoute()"><span class="suffix">XOF</span></div>
+        </div>
+        <div class="field">
+          <label>Autres frais / mois</label>
+          <div class="input-wrap"><input type="number" id="r-other" value="0" oninput="calcRoute()"><span class="suffix">XOF</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Carburant &amp; opérations</div>
+      <div class="grid2" style="gap:10px">
+        <div class="field">
+          <label>Consommation</label>
+          <div class="input-wrap"><input type="number" id="r-conso" value="14" step=".5" oninput="calcRoute()"><span class="suffix">L/100km</span></div>
+          <div class="hint">Minibus diesel 18 pl.</div>
+        </div>
+        <div class="field">
+          <label>Prix carburant</label>
+          <div class="input-wrap"><input type="number" id="r-fuelprice" value="640" oninput="calcRoute()"><span class="suffix">FCFA/L</span></div>
+          <div class="hint">Gasoil CIV ≈ 635–650</div>
+        </div>
+        <div class="field">
+          <label>Nombre de sièges</label>
+          <div class="input-wrap"><input type="number" id="r-seats" value="18" oninput="calcRoute()"></div>
+        </div>
+        <div class="field">
+          <label>Jours de travail / mois</label>
+          <div class="input-wrap"><input type="number" id="r-days" value="22" oninput="calcRoute()"></div>
+        </div>
+        <div class="field">
+          <label>Taux d'occupation</label>
+          <div class="input-wrap"><input type="number" id="r-occ" value="80" step="5" oninput="calcRoute()"><span class="suffix">%</span></div>
+        </div>
+        <div class="field">
+          <label>Marge Shuttlers cible</label>
+          <div class="input-wrap"><input type="number" id="r-margin" value="30" step="1" oninput="calcRoute()"><span class="suffix">%</span></div>
+        </div>
+      </div>
+      <div class="calc-field" style="margin-top:12px">
+        <span class="calc-field-label">Remboursement mensuel calculé</span>
+        <span class="calc-field-value" id="r-pmt-display">—</span>
+      </div>
+      <div class="calc-field" style="margin-top:6px;background:var(--amber-100);border-color:var(--amber-200)">
+        <span class="calc-field-label" style="color:#92400e">Carburant journalier calculé</span>
+        <span class="calc-field-value" style="color:#92400e" id="r-fuel-display">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEAT RESULT CARDS -->
+  <div class="seat-result-grid">
+    <div class="seat-card cos">
+      <div class="seat-card-icon">💸</div>
+      <div class="seat-card-label">Coût supply / jour</div>
+      <div class="seat-card-value" id="rc-cos-daily">—</div>
+      <div class="seat-card-sub">XOF (total véhicule)</div>
+    </div>
+    <div class="seat-card aller">
+      <div class="seat-card-icon">🪑</div>
+      <div class="seat-card-label">Prix siège — Aller</div>
+      <div class="seat-card-value" id="rc-price-ow">—</div>
+      <div class="seat-card-sub">XOF / passager</div>
+    </div>
+    <div class="seat-card ar">
+      <div class="seat-card-icon">🔄</div>
+      <div class="seat-card-label">Prix siège — Aller-Retour</div>
+      <div class="seat-card-value" id="rc-price-rt">—</div>
+      <div class="seat-card-sub">XOF / passager</div>
+    </div>
+    <div class="seat-card marge">
+      <div class="seat-card-icon">📈</div>
+      <div class="seat-card-label">Marge / siège (aller)</div>
+      <div class="seat-card-value" id="rc-margin-seat">—</div>
+      <div class="seat-card-sub">XOF · <span id="rc-margin-pct">—</span>%</div>
+    </div>
+  </div>
+
+  <!-- IN / OUT DETAIL -->
+  <div class="inout-grid">
+    <div class="inout-card" style="border-color:var(--green-200);background:var(--green-50)">
+      <div class="inout-title" style="color:var(--green-800)">
+        <span class="dot" style="background:var(--green-500)"></span>
+        Trajet IN <span class="tag in">Aller</span>
+        <span style="font-size:11px;font-weight:400;color:var(--green-600)">&nbsp;Matin · domicile → travail</span>
+      </div>
+      <div class="inout-row">
+        <span class="inout-row-label">Coût supply / siège (out)</span>
+        <span class="inout-row-val" id="in-cos-seat">—</span>
+      </div>
+      <div class="inout-row">
+        <span class="inout-row-label">Prix passager (in)</span>
+        <span class="inout-row-val" style="color:var(--green-700)" id="in-price">—</span>
+      </div>
+      <div class="inout-row">
+        <span class="inout-row-label">Marge Shuttlers / siège</span>
+        <span class="inout-row-val" style="color:var(--green-600)" id="in-margin">—</span>
+      </div>
+      <div class="inout-row">
+        <span class="inout-row-label">Marge %</span>
+        <span class="inout-row-val" style="color:var(--green-600)" id="in-margin-pct">—</span>
+      </div>
+    </div>
+
+    <div class="inout-card" style="border-color:#bfdbfe;background:#eff6ff">
+      <div class="inout-title" style="color:#1e3a8a">
+        <span class="dot" style="background:#3b82f6"></span>
+        Trajet OUT <span class="tag out">Retour</span>
+        <span style="font-size:11px;font-weight:400;color:#3b82f6">&nbsp;Soir · travail → domicile</span>
+      </div>
+      <div class="inout-row">
+        <span class="inout-row-label">Coût supply / siège (out)</span>
+        <span class="inout-row-val" id="out-cos-seat">—</span>
+      </div>
+      <div class="inout-row">
+        <span class="inout-row-label">Prix passager (in)</span>
+        <span class="inout-row-val" style="color:#1d4ed8" id="out-price">—</span>
+      </div>
+      <div class="inout-row">
+        <span class="inout-row-label">Marge Shuttlers / siège</span>
+        <span class="inout-row-val" style="color:#1d4ed8" id="out-margin">—</span>
+      </div>
+      <div class="inout-row">
+        <span class="inout-row-label">Marge %</span>
+        <span class="inout-row-val" style="color:#1d4ed8" id="out-margin-pct">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- COST BREAKDOWN -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-title">Décomposition du coût de supply journalier</div>
+    <table class="breakdown">
+      <thead><tr><th>Poste</th><th>XOF/j</th><th class="bar-cell">% du total</th></tr></thead>
+      <tbody id="r-breakdown-body"></tbody>
+    </table>
+  </div>
+
+  <!-- DISTANCE TABLE -->
+  <div class="card">
+    <div class="card-title">Tableau distance → prix par siège (FCFA)</div>
+    <p style="font-size:12px;color:var(--gray-500);margin-bottom:14px">La ligne en vert correspond à la distance saisie. Tous les autres paramètres restent identiques.</p>
+    <div class="distance-table-wrap">
+      <table class="dist-table" id="r-dist-table">
+        <thead>
+          <tr>
+            <th>Distance aller (km)</th>
+            <th>Carburant/j</th>
+            <th>COS / jour</th>
+            <th>COS / siège (aller)</th>
+            <th>Prix aller</th>
+            <th>Prix AR</th>
+            <th>Marge/siège aller</th>
+            <th>Marge %</th>
+          </tr>
+        </thead>
+        <tbody id="r-dist-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <strong>Shuttlers CI</strong> — Pricing Simulator &nbsp;·&nbsp; Formules : SP = COS / (1 − marge) &nbsp;·&nbsp; Prix AR = SP / (occupation × sièges) &nbsp;·&nbsp; Prix AO = Prix AR / 2 &nbsp;·&nbsp; Marge/siège = Prix AO × marge
+</div>
+
+<script>
+// ─── UTILITIES ────────────────────────────────
+const fmt = v => isNaN(v)||!isFinite(v) ? '—' : Math.round(v).toLocaleString('fr-FR');
+const fmtK = v => isNaN(v)||!isFinite(v) ? '—' : (Math.round(v/100)/10).toLocaleString('fr-FR',{minimumFractionDigits:1}) + 'k';
+const pct = v => isNaN(v)||!isFinite(v) ? '—' : Math.round(v*10)/10 + '%';
+const el = id => document.getElementById(id);
+
+function pmt(r, n, pv) {
+  if (n <= 0 || pv <= 0) return 0;
+  if (r === 0) return pv / n;
+  return pv * r * Math.pow(1+r, n) / (Math.pow(1+r, n) - 1);
+}
+
+// ─── TAB SWITCH ───────────────────────────────
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  el('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ─── FLEET LOAN TOGGLE ────────────────────────
+let fleetLoan = true;
+function setLoan(val) {
+  fleetLoan = val;
+  el('f-loan-fields').style.display = val ? 'block' : 'none';
+  el('f-loan-yes').classList.toggle('active', val);
+  el('f-loan-no').classList.toggle('active', !val);
+  calcFleet();
+}
+
+// ─── FLEET CALC ────────────────────────────────
+function calcFleet() {
+  const cost   = +el('f-cost').value   || 0;
+  const ins    = +el('f-ins').value    || 0;
+  const doc    = +el('f-doc').value    || 0;
+  const track  = +el('f-track').value  || 0;
+  const rate   = (+el('f-rate').value  || 0) / 100;
+  const tenure = +el('f-tenure').value || 0;
+  const driver = +el('f-driver').value || 0;
+  const maint  = +el('f-maint').value  || 0;
+  const mgt    = +el('f-mgt').value    || 0;
+  const other  = +el('f-other').value  || 0;
+  const fuelD  = +el('f-fuel').value   || 0;
+  const seats  = +el('f-seats').value  || 1;
+  const days   = +el('f-days').value   || 22;
+  const margin = (+el('f-margin').value|| 0) / 100;
+  const occ    = (+el('f-occ').value   || 0) / 100;
+
+  const capital = cost + ins + doc + track;
+  const monthly = fleetLoan ? pmt(rate/12, tenure, capital) : 0;
+  el('f-pmt-display').textContent = fmt(monthly) + ' XOF';
+
+  const assetD  = monthly / days;
+  const driverD = driver / days;
+  const maintD  = maint / days;
+  const mgtD    = mgt / days;
+  const otherD  = other / days;
+  const total   = assetD + driverD + fuelD + maintD + mgtD + otherD;
+
+  const sp      = total / (1 - margin);
+  const priceRT = sp / (occ * seats);
+  const priceOW = priceRT / 2;
+
+  el('f-price-ow').textContent = fmt(priceOW);
+  el('f-price-rt').textContent = fmt(priceRT);
+  el('f-margin-label').textContent = Math.round(margin*100);
+
+  // breakdown
+  const items = [
+    {label:'Asset (crédit véhicule)', v: assetD, cls:''},
+    {label:'Chauffeur', v: driverD, cls:''},
+    {label:'Carburant', v: fuelD, cls:'amber'},
+    {label:'Maintenance', v: maintD, cls:'amber'},
+    {label:'Frais de gestion', v: mgtD, cls:''},
+    {label:'Autres frais', v: otherD, cls:''},
+    {label:'Total COS / jour', v: total, cls:''},
+  ];
+  let html = '';
+  items.forEach((it,i) => {
+    const p = total > 0 ? Math.round(it.v/total*100) : 0;
+    const isTotal = i === items.length-1;
+    html += `<tr>
+      <td style="${isTotal?'font-weight:600':''}">${it.label}</td>
+      <td class="val" style="${isTotal?'font-weight:600':''}">${fmt(it.v)}</td>
+      <td class="bar-cell">${isTotal?'':'<div class="bar-track"><div class="bar-fill '+it.cls+'" style="width:'+p+'%"></div></div>'}</td>
+    </tr>`;
+  });
+  el('f-breakdown-body').innerHTML = html;
+
+  const cos_m   = total * days;
+  const rev_m   = sp * days;
+  const profit_m= rev_m - cos_m;
+  const realMg  = rev_m > 0 ? profit_m/rev_m : 0;
+  const beSeats = sp > 0 && priceOW > 0 ? Math.ceil(sp / (priceOW * 2)) : 0;
+
+  el('f-cos-monthly').textContent = fmtK(cos_m);
+  el('f-rev-monthly').textContent = fmtK(rev_m);
+  el('f-profit-monthly').textContent = fmtK(profit_m);
+  el('f-real-margin').textContent = pct(realMg*100);
+  el('f-be-seats').textContent = beSeats + ' / ' + seats;
+  el('f-profit-bar').style.width = Math.min(100, Math.max(0, realMg*100)) + '%';
+  el('f-profit-bar').style.background = realMg >= margin ? 'var(--green-400)' : '#f59e0b';
+}
+
+// ─── IO CALC ───────────────────────────────────
+function calcIO() {
+  const lease  = +el('io-lease').value  || 0;
+  const seats  = +el('io-seats').value  || 1;
+  const days   = +el('io-days').value   || 22;
+  const margin = (+el('io-margin').value|| 0) / 100;
+  const occ    = (+el('io-occ').value   || 0) / 100;
+
+  const sp      = lease / (1 - margin);
+  const priceRT = sp / (occ * seats);
+  const priceOW = priceRT / 2;
+
+  el('io-price-ow').textContent = fmt(priceOW);
+  el('io-price-rt').textContent = fmt(priceRT);
+  el('io-margin-label').textContent = Math.round(margin*100) + '%';
+  el('io-sp').textContent = fmt(sp);
+
+  const cos_m   = lease * days;
+  const rev_m   = sp * days;
+  const profit_m= rev_m - cos_m;
+  const realMg  = rev_m > 0 ? profit_m/rev_m : 0;
+  const beSeats = priceOW > 0 ? Math.ceil(sp / (priceOW * 2)) : 0;
+
+  el('io-cos-monthly').textContent = fmtK(cos_m);
+  el('io-rev-monthly').textContent = fmtK(rev_m);
+  el('io-profit-monthly').textContent = fmtK(profit_m);
+  el('io-real-margin').textContent = pct(realMg*100);
+  el('io-be-seats').textContent = beSeats + ' / ' + seats;
+
+  // sensitivity table
+  const occs  = [60,70,80,90,100];
+  const seatsArr = [6,10,14,18,22,27,30];
+  let thead = '<tr><th>Sièges / Occup.</th>' + occs.map(o=>`<th>${o}%</th>`).join('') + '</tr>';
+  let tbody = '';
+  seatsArr.forEach(s => {
+    tbody += `<tr>`;
+    tbody += `<td>${s} sièges</td>`;
+    occs.forEach(o => {
+      const p = sp / (s * o/100) / 2;
+      const cls = (s===seats && o===Math.round(occ*100)) ? ' class="sens-highlight"' : '';
+      tbody += `<td${cls}>${fmt(p)}</td>`;
+    });
+    tbody += '</tr>';
+  });
+  el('io-sens-head').innerHTML = thead;
+  el('io-sens-body').innerHTML = tbody;
+}
+
+function loadIO(lease, seats, margin, occ) {
+  el('io-lease').value = lease;
+  el('io-seats').value = seats;
+  el('io-margin').value = margin;
+  el('io-occ').value = occ;
+  calcIO();
+}
+
+// ─── ROUTE CALC ────────────────────────────────
+function calcRoute() {
+  const distOW  = +el('r-dist').value       || 40;
+  const distRT  = distOW * 2;
+  const cost    = +el('r-cost').value       || 0;
+  const extra   = +el('r-fixed-extra').value|| 0;
+  const rate    = (+el('r-rate').value      || 0) / 100;
+  const tenure  = +el('r-tenure').value     || 1;
+  const driver  = +el('r-driver').value     || 0;
+  const maint   = +el('r-maint').value      || 0;
+  const mgt     = +el('r-mgt').value        || 0;
+  const other   = +el('r-other').value      || 0;
+  const conso   = +el('r-conso').value      || 14;
+  const fprice  = +el('r-fuelprice').value  || 640;
+  const seats   = +el('r-seats').value      || 1;
+  const days    = +el('r-days').value       || 22;
+  const margin  = (+el('r-margin').value    || 0) / 100;
+  const occ     = (+el('r-occ').value       || 0) / 100;
+
+  // fuel from distance
+  const fuelD   = distRT / 100 * conso * fprice;
+
+  const capital = cost + extra;
+  const monthly = pmt(rate/12, tenure, capital);
+  el('r-pmt-display').textContent = fmt(monthly) + ' XOF';
+  el('r-fuel-display').textContent = fmt(fuelD) + ' XOF';
+
+  const assetD  = monthly / days;
+  const driverD = driver / days;
+  const maintD  = maint / days;
+  const mgtD    = mgt / days;
+  const otherD  = other / days;
+  const cosD    = assetD + driverD + fuelD + maintD + mgtD + otherD;
+
+  // Daily vehicle selling price (includes margin)
+  const sp      = cosD / (1 - margin);
+  // AR price per seat  = SP / (occ * seats)
+  const priceRT = sp / (occ * seats);
+  // AO price per seat  = priceRT / 2
+  const priceOW = priceRT / 2;
+
+  // Per single trip, per seat
+  // 2 trips per day, so cost per seat per trip (one way) = cosD / (seats * occ * 2)
+  const cosPerSeatOW  = cosD / (seats * occ * 2);
+  const marginPerSeatOW = priceOW - cosPerSeatOW;
+
+  // Hero distance description
+  el('r-dist-desc').innerHTML = `Distance aller-retour : <strong style="color:white">${distRT} km</strong> &nbsp;·&nbsp; Carburant estimé : <strong style="color:white">${fmt(fuelD)} XOF/j</strong>`;
+
+  // Top cards
+  el('rc-cos-daily').textContent   = fmt(cosD);
+  el('rc-price-ow').textContent    = fmt(priceOW);
+  el('rc-price-rt').textContent    = fmt(priceRT);
+  el('rc-margin-seat').textContent = fmt(marginPerSeatOW);
+  el('rc-margin-pct').textContent  = cosPerSeatOW > 0 ? Math.round(marginPerSeatOW/priceOW*100) : '—';
+
+  // IN card (aller, matin)
+  el('in-cos-seat').textContent    = fmt(cosPerSeatOW) + ' XOF';
+  el('in-price').textContent       = fmt(priceOW) + ' XOF';
+  el('in-margin').textContent      = fmt(marginPerSeatOW) + ' XOF';
+  el('in-margin-pct').textContent  = priceOW > 0 ? Math.round(marginPerSeatOW/priceOW*100) + '%' : '—';
+
+  // OUT card (retour, soir) — symmetric
+  el('out-cos-seat').textContent   = fmt(cosPerSeatOW) + ' XOF';
+  el('out-price').textContent      = fmt(priceOW) + ' XOF';
+  el('out-margin').textContent     = fmt(marginPerSeatOW) + ' XOF';
+  el('out-margin-pct').textContent = priceOW > 0 ? Math.round(marginPerSeatOW/priceOW*100) + '%' : '—';
+
+  // Breakdown table
+  const items = [
+    {label:'Asset (remboursement crédit)', v: assetD},
+    {label:'Chauffeur', v: driverD},
+    {label:'Carburant (calculé sur '+distRT+' km)', v: fuelD, amber:true},
+    {label:'Maintenance', v: maintD, amber:true},
+    {label:'Frais de gestion', v: mgtD},
+    {label:'Autres frais', v: otherD},
+    {label:'Total COS / jour', v: cosD, total:true},
+  ];
+  let html = '';
+  items.forEach(it => {
+    const p = cosD > 0 ? Math.round(it.v/cosD*100) : 0;
+    html += `<tr>
+      <td style="${it.total?'font-weight:600':''}">${it.label}</td>
+      <td class="val" style="${it.total?'font-weight:600':''}">${fmt(it.v)}</td>
+      <td class="bar-cell">${it.total?'100%':'<div class="bar-track"><div class="bar-fill'+(it.amber?' amber':'')+'" style="width:'+p+'%"></div></div>'}</td>
+    </tr>`;
+  });
+  el('r-breakdown-body').innerHTML = html;
+
+  // Distance table
+  const distances = [10,15,20,25,30,35,40,45,50,55,60,70,80,100];
+  let thtml = '';
+  distances.forEach(d => {
+    const fD   = d*2/100 * conso * fprice;
+    const cD   = assetD + driverD + fD + maintD + mgtD + otherD;
+    const spD  = cD / (1-margin);
+    const pRT  = spD / (occ*seats);
+    const pOW  = pRT / 2;
+    const cPS  = cD / (seats*occ*2);
+    const mPS  = pOW - cPS;
+    const mPct = pOW > 0 ? Math.round(mPS/pOW*100) : 0;
+    const active = d === distOW;
+    thtml += `<tr class="${active?'active-row':''}">
+      <td>${d} km${active?' ◀ (actuel)':''}</td>
+      <td>${fmt(fD)}</td>
+      <td>${fmt(cD)}</td>
+      <td>${fmt(cPS)}</td>
+      <td>${fmt(pOW)}</td>
+      <td>${fmt(pRT)}</td>
+      <td>${fmt(mPS)}</td>
+      <td>${mPct}%</td>
+    </tr>`;
+  });
+  el('r-dist-body').innerHTML = thtml;
+}
+
+// ─── SYNC FROM FLEET ──────────────────────────
+function syncFromFleet() {
+  el('r-cost').value       = el('f-cost').value;
+  el('r-fixed-extra').value= (+el('f-ins').value + +el('f-doc').value + +el('f-track').value);
+  el('r-rate').value       = el('f-rate').value;
+  el('r-tenure').value     = el('f-tenure').value;
+  el('r-driver').value     = el('f-driver').value;
+  el('r-maint').value      = el('f-maint').value;
+  el('r-mgt').value        = el('f-mgt').value;
+  el('r-other').value      = el('f-other').value;
+  el('r-seats').value      = el('f-seats').value;
+  el('r-days').value       = el('f-days').value;
+  el('r-margin').value     = el('f-margin').value;
+  el('r-occ').value        = el('f-occ').value;
+  calcRoute();
+  // visual feedback
+  const btn = document.querySelector('.sync-btn');
+  btn.textContent = '✓ Synchronisé !';
+  btn.style.background = 'var(--green-700)';
+  setTimeout(()=>{ btn.textContent='↑ Reprendre depuis Fleet'; btn.style.background=''; }, 1800);
+}
+
+// ─── INIT ─────────────────────────────────────
+calcFleet();
+calcIO();
+calcRoute();
+</script>
+</body>
+</html>
